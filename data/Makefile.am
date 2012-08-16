@@ -5,7 +5,7 @@ icons_DATA = \
     media-actions-pause.png \
     media-actions-segment-point.png \
     media-actions-start.png \
-    subtitle-toggle.png \
+    quit.png \
     video-stream-toggle.png \
     vid-panel.png
 iconsdir = $(datadir)/snappy
