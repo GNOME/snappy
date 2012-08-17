@@ -89,8 +89,8 @@ struct _UserInterface
   gchar *play_png, *pause_png;
   gchar *segment_png;
   gchar *volume_low_png, *volume_high_png;
+  gchar *fullscreen_toggle_png;
   gchar *quit_png;
-  gchar *video_stream_toggle_png, *audio_stream_toggle_png;
   gchar *data_dir;
   gchar *duration_str;
 
@@ -106,8 +106,8 @@ struct _UserInterface
   ClutterActor *control_pos;
   ClutterActor *volume_box;
   ClutterActor *volume_low, *volume_high;
+  ClutterActor *fullscreen_toggle;
   ClutterActor *quit_button;
-  ClutterActor *video_stream_toggle, *audio_stream_toggle;
   ClutterActor *vol_int, *vol_int_bg, *volume_point;
   ClutterActor *info_box;
   ClutterActor *main_box;

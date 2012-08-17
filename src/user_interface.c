@@ -346,14 +346,11 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
             show_controls (ui, FALSE);
           }
 
-        } else if (actor == ui->audio_stream_toggle) {
-          cycle_streams (ui->engine, STREAM_AUDIO);
+        } else if (actor == ui->fullscreen_toggle) {
+          toggle_fullscreen (ui);
 
         } else if (actor == ui->quit_button) {
           clutter_main_quit ();
-
-        } else if (actor == ui->video_stream_toggle) {
-          cycle_streams (ui->engine, STREAM_VIDEO);
         }
       }
 
@@ -407,23 +404,20 @@ load_controls (UserInterface * ui)
       "audio-volume-low.png", NULL);
   ui->volume_high_png = g_build_filename (ui->data_dir,
       "audio-volume-high.png", NULL);
+  ui->fullscreen_toggle_png = g_build_filename (ui->data_dir,
+      "fullscreen-toggle.png", NULL);
   ui->quit_png = g_build_filename (ui->data_dir,
       "quit.png", NULL);
-  ui->video_stream_toggle_png = g_build_filename (ui->data_dir,
-      "video-stream-toggle.png", NULL);
-  ui->audio_stream_toggle_png = g_build_filename (ui->data_dir,
-      "audio-stream-toggle.png", NULL);
 
   icon_files[0] = vid_panel_png;
   icon_files[1] = ui->play_png;
   icon_files[2] = ui->pause_png;
   icon_files[3] = ui->volume_low_png;
   icon_files[4] = ui->volume_high_png;
-  icon_files[5] = ui->quit_png;
-  icon_files[6] = ui->video_stream_toggle_png;
-  icon_files[7] = ui->audio_stream_toggle_png;
+  icon_files[5] = ui->fullscreen_toggle_png;
+  icon_files[6] = ui->quit_png;
 
-  for (c = 0; c < 8; c++) {
+  for (c = 0; c < 7; c++) {
     if (!g_file_test (icon_files[c], G_FILE_TEST_EXISTS)) {
       g_print ("Icon file doesn't exist, are you sure you have "
           " installed snappy correctly?\nThis file needed is: %s\n",
@@ -609,28 +603,16 @@ load_controls (UserInterface * ui)
   clutter_box_layout_set_spacing (CLUTTER_BOX_LAYOUT (bottom_box_layout), 5);
   bottom_box = clutter_box_new (bottom_box_layout);
 
-  // Controls video stream toggle
-  ui->video_stream_toggle = clutter_texture_new_from_file
-      (ui->video_stream_toggle_png, &error);
-  if (!ui->video_stream_toggle && error)
+  // Controls fullscreen toggle
+  ui->fullscreen_toggle = clutter_texture_new_from_file
+      (ui->fullscreen_toggle_png, &error);
+  if (!ui->fullscreen_toggle && error)
     g_debug ("Clutter error: %s", error->message);
   if (error) {
     g_error_free (error);
     error = NULL;
   }
-  clutter_box_pack (CLUTTER_BOX (bottom_box), ui->video_stream_toggle,
-      "x-align", CLUTTER_BOX_ALIGNMENT_START, NULL);
-
-  // Controls audio stream toggle
-  ui->audio_stream_toggle = clutter_texture_new_from_file
-      (ui->audio_stream_toggle_png, &error);
-  if (!ui->audio_stream_toggle && error)
-    g_debug ("Clutter error: %s", error->message);
-  if (error) {
-    g_error_free (error);
-    error = NULL;
-  }
-  clutter_box_pack (CLUTTER_BOX (bottom_box), ui->audio_stream_toggle,
+  clutter_box_pack (CLUTTER_BOX (bottom_box), ui->fullscreen_toggle,
       "x-align", CLUTTER_BOX_ALIGNMENT_END, NULL);
 
   // Controls quit button
@@ -957,9 +939,8 @@ update_controls_size (UserInterface * ui)
   icon_size = ctl_height * VOLUME_ICON_RATIO;
   clutter_actor_set_size (ui->volume_low, icon_size, icon_size);
   clutter_actor_set_size (ui->volume_high, icon_size * 1.2f, icon_size);        /* originally 120x100 */
+  clutter_actor_set_size (ui->fullscreen_toggle, icon_size, icon_size);
   clutter_actor_set_size (ui->quit_button, icon_size, icon_size);
-  clutter_actor_set_size (ui->video_stream_toggle, icon_size, icon_size);
-  clutter_actor_set_size (ui->audio_stream_toggle, icon_size, icon_size);
 
   update_volume (ui, -1);
 }
@@ -990,9 +971,8 @@ interface_init (UserInterface * ui)
   ui->volume_low_png = NULL;
   ui->volume_high_png = NULL;
 
+  ui->fullscreen_toggle_png = NULL;
   ui->quit_png = NULL;
-  ui->video_stream_toggle_png = NULL;
-  ui->audio_stream_toggle_png = NULL;
 
   ui->duration_str = NULL;
 
