@@ -160,7 +160,7 @@ main (int argc, char *argv[])
   ClutterActor *video_texture;
   GstElement *sink;
 
-  gboolean ok, blind = FALSE, fullscreen = FALSE, hide = FALSE, loop = FALSE;
+  gboolean ok, blind = FALSE, fullscreen = FALSE, hide = FALSE, loop = TRUE;
   gboolean secret = FALSE, tags = FALSE;
   gint ret = 0;
   guint c, index, pos = 0;
