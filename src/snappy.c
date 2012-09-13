@@ -153,7 +153,7 @@ process_args (int argc, char *argv[],
 
 /*            snappy's main function             */
 int
-main (int argc, char *argv[])
+snappy_main (int argc, char *argv[])
 {
   UserInterface *ui = NULL;
   GstEngine *engine = NULL;
