@@ -43,6 +43,7 @@
 #include <src/snra-json.h>
 
 #include "snra-client.h"
+#include "user_interface.h"
 
 #define DISABLED_STATE GST_STATE_PAUSED
 
@@ -66,7 +67,6 @@ static void snra_client_dispose (GObject * object);
 static void search_for_server (SnraClient * client);
 static void connect_to_server (SnraClient * client, const gchar * server,
     int port);
-static void construct_player (SnraClient * client);
 
 static gboolean
 try_reconnect (SnraClient * client)
@@ -96,8 +96,7 @@ handle_connection_closed_cb (G_GNUC_UNUSED SoupSession * session,
   }
   client->was_connected = FALSE;
 
-  if (client->player)
-    gst_element_set_state (client->player, GST_STATE_READY);
+  engine_stop (client->ui->engine);
   if (client->timeout == 0) {
     client->timeout =
         g_timeout_add_seconds (1, (GSourceFunc) try_reconnect, client);
@@ -121,14 +120,10 @@ handle_enrol_message (SnraClient * client, GstStructure * s)
   cur_time = (GstClockTime) (tmp);
 
   if (snra_json_structure_get_double (s, "volume-level", &new_vol)) {
-    if (client->player == NULL)
-      construct_player (client);
+    if (client->ui == NULL)
+      client->ui = snappy_construct ();
 
-    if (client->player) {
-      //g_print ("New volume %g\n", new_vol);
-      g_object_set (G_OBJECT (client->player), "volume", new_vol,
-          "mute", (gboolean) (new_vol == 0.0), NULL);
-    }
+    engine_volume (client->ui->engine, new_vol);
   }
 
   snra_json_structure_get_boolean (s, "enabled", &client->enabled);
@@ -209,27 +204,6 @@ on_error_msg (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
 }
 
 static void
-construct_player (SnraClient * client)
-{
-  GstBus *bus;
-
-  if (GST_CHECK_VERSION (0, 11, 1))
-    client->player = gst_element_factory_make ("playbin", NULL);
-  else
-    client->player = gst_element_factory_make ("playbin2", NULL);
-
-  if (client->player == NULL) {
-    g_warning ("Failed to construct playbin");
-    return;
-  }
-  bus = gst_element_get_bus (GST_ELEMENT (client->player));
-  gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message::eos", (GCallback) (on_eos_msg), client);
-  g_signal_connect (bus, "message::error", (GCallback) (on_error_msg), client);
-  gst_object_unref (bus);
-}
-
-static void
 handle_set_media_message (SnraClient * client, GstStructure * s)
 {
   const gchar *protocol, *path;
@@ -256,36 +230,40 @@ handle_set_media_message (SnraClient * client, GstStructure * s)
 
   base_time = (GstClockTime) (tmp);
 
-  if (client->player == NULL) {
-    construct_player (client);
-    if (client->player == NULL)
-      return;
-  } else {
-    gst_element_set_state (client->player, GST_STATE_NULL);
-  }
-
   uri =
       g_strdup_printf ("%s://%s:%d%s", protocol, client->connected_server, port,
       path);
   g_print ("Playing URI %s base_time %" GST_TIME_FORMAT "\n", uri,
       GST_TIME_ARGS (base_time));
-  g_object_set (client->player, "uri", uri, NULL);
+ 
+  if (client->state == GST_STATE_NULL) {
+    client->ui = snappy_construct ();
+    engine_load_uri (client->ui->engine, uri);
+    interface_start (client->ui, uri);
+    client->state = GST_STATE_READY;
+  } else {
+    engine_stop (client->ui->engine);
+  }
+
+  engine_open_uri (client->ui->engine, uri);
   g_free (uri);
 
-  gst_element_set_start_time (client->player, GST_CLOCK_TIME_NONE);
-  gst_element_set_base_time (client->player, base_time);
-  gst_pipeline_use_clock (GST_PIPELINE (client->player), client->net_clock);
+  gst_element_set_start_time (client->ui->engine->player, GST_CLOCK_TIME_NONE);
+  gst_element_set_base_time (client->ui->engine->player, base_time);
+  gst_pipeline_use_clock (GST_PIPELINE (client->ui->engine->player),
+      client->net_clock);
 
   if (client->enabled) {
-    if (paused)
+    if (paused) {
       client->state = GST_STATE_PAUSED;
-    else
+      engine_stop (client->ui->engine);
+    } else {
       client->state = GST_STATE_PLAYING;
+      engine_play (client->ui->engine);
+    }
   } else {
     client->state = DISABLED_STATE;
   }
-
-  gst_element_set_state (client->player, client->state);
 }
 
 static void
@@ -300,17 +278,20 @@ handle_play_message (SnraClient * client, GstStructure * s)
 
   client->paused = FALSE;
 
-  if (client->player) {
+  if (client->ui) {
     GstClockTime stream_time =
         gst_clock_get_time (client->net_clock) - base_time;
     g_print ("Playing base_time %" GST_TIME_FORMAT " (offset %" GST_TIME_FORMAT
         ")\n", GST_TIME_ARGS (base_time), GST_TIME_ARGS (stream_time));
-    gst_element_set_base_time (GST_ELEMENT (client->player), base_time);
-    if (client->enabled == FALSE)
+    gst_element_set_base_time (GST_ELEMENT (client->ui->engine->player),
+        base_time);
+    if (client->enabled == FALSE) {
       client->state = DISABLED_STATE;
-    else
+      engine_stop (client->ui->engine);
+    } else {
       client->state = GST_STATE_PLAYING;
-    gst_element_set_state (GST_ELEMENT (client->player), client->state);
+      engine_play (client->ui->engine);
+    }
   }
 }
 
@@ -322,13 +303,8 @@ handle_set_volume_message (SnraClient * client, GstStructure * s)
   if (!snra_json_structure_get_double (s, "level", &new_vol))
     return;
 
-  if (client->player == NULL)
-    construct_player (client);
-
-  if (client->player) {
-    // g_print ("New volume %g\n", new_vol);
-    g_object_set (G_OBJECT (client->player), "volume", new_vol,
-        "mute", (gboolean) (new_vol == 0.0), NULL);
+  if (client->ui) {
+    engine_volume (client->ui->engine, new_vol);
   }
 }
 
@@ -340,13 +316,13 @@ handle_set_client_message (SnraClient * client, GstStructure * s)
 
   if (client->enabled == FALSE)
     client->state = DISABLED_STATE;
-  else if (client->paused)
+  else if (client->paused) {
     client->state = GST_STATE_PAUSED;
-  else
+    engine_stop (client->ui->engine);
+  } else {
     client->state = GST_STATE_PLAYING;
-
-  if (client->player)
-    gst_element_set_state (GST_ELEMENT (client->player), client->state);
+    engine_play (client->ui->engine);
+  }
 }
 
 static void
@@ -390,23 +366,30 @@ handle_received_chunk (G_GNUC_UNUSED SoupMessage * msg, SoupBuffer * chunk,
       return;
     }
 
-    if (g_str_equal (msg_type, "enrol"))
+    if (g_str_equal (msg_type, "enrol")) {
+      g_print ("enrol\n");
       handle_enrol_message (client, s);
-    else if (g_str_equal (msg_type, "set-media"))
+    } else if (g_str_equal (msg_type, "set-media")) {
+      g_print ("set-media\n");
       handle_set_media_message (client, s);
-    else if (g_str_equal (msg_type, "play"))
+    } else if (g_str_equal (msg_type, "play")) {
+      g_print ("play\n");
       handle_play_message (client, s);
-    else if (g_str_equal (msg_type, "pause")) {
+    } else if (g_str_equal (msg_type, "pause")) {
+      g_print ("pause\n");
       client->paused = TRUE;
-      if (client->enabled == FALSE)
+      if (client->enabled == FALSE) {
         client->state = DISABLED_STATE;
-      else
+        engine_stop (client->ui->engine);
+      } else {
         client->state = GST_STATE_PAUSED;
-      if (client->player)
-        gst_element_set_state (GST_ELEMENT (client->player), client->state);
+        engine_stop (client->ui->engine);
+      }
     } else if (g_str_equal (msg_type, "volume")) {
+      g_print ("volume\n");
       handle_set_volume_message (client, s);
     } else if (g_str_equal (msg_type, "client-setting")) {
+      g_print ("client-setting\n");
       handle_set_client_message (client, s);
     } else {
       g_print ("Unhandled event of type %s\n", msg_type);
@@ -443,6 +426,7 @@ snra_client_init (SnraClient * client)
   client->soup = soup_session_async_new ();
   client->server_port = 5457;
   client->state = GST_STATE_NULL;
+  client->ui = NULL;
 }
 
 static void
@@ -492,11 +476,10 @@ snra_client_finalize (GObject * object)
     g_object_unref (client->soup);
   if (client->json)
     g_object_unref (client->json);
-  if (client->player) {
-    GstBus *bus = gst_element_get_bus (client->player);
+  if (client->ui) {
+    GstBus *bus = gst_element_get_bus (client->ui->engine->player);
     gst_bus_remove_signal_watch (bus);
     gst_object_unref (bus);
-    gst_object_unref (client->player);
   }
 
   g_free (client->server_host);
@@ -512,8 +495,8 @@ snra_client_dispose (GObject * object)
 
   if (client->soup)
     soup_session_abort (client->soup);
-  if (client->player)
-    gst_element_set_state (client->player, GST_STATE_NULL);
+  if (client->ui)
+    engine_stop (client->ui->engine);
 
   G_OBJECT_CLASS (snra_client_parent_class)->dispose (object);
 }

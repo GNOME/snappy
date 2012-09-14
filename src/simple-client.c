@@ -82,6 +82,7 @@ main (int argc, char *argv[])
   const gchar *server = NULL;
 
   gst_init (&argc, &argv);
+  clutter_init (&argc, &argv);
 
   if (argc > 1) {
     /* Connect directly to the requested server, no avahi */

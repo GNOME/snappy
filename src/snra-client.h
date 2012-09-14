@@ -13,6 +13,7 @@
 #include <avahi-glib/glib-watch.h>
 
 #include <src/snra-types.h>
+#include <src/user_interface.h>
 
 G_BEGIN_DECLS
 
@@ -35,7 +36,7 @@ struct _SnraClient
   SoupSession *soup;
   JsonParser *json;
 
-  GstElement *player;
+  // GstElement *player;
 
   guint timeout;
 
@@ -47,6 +48,8 @@ struct _SnraClient
   AvahiGLibPoll *glib_poll;
   AvahiClient *avahi_client;
   AvahiServiceBrowser *avahi_sb;
+
+  UserInterface *ui;
 };
 
 struct _SnraClientClass

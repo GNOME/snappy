@@ -152,13 +152,13 @@ process_args (int argc, char *argv[],
 
 
 /*            snappy's main function             */
-int
-snappy_main (int argc, char *argv[])
+UserInterface *
+snappy_construct ()
 {
-  UserInterface *ui = NULL;
   GstEngine *engine = NULL;
   ClutterActor *video_texture;
   GstElement *sink;
+  UserInterface *ui = NULL;
 
   gboolean ok, blind = FALSE, fullscreen = FALSE, hide = FALSE, loop = TRUE;
   gboolean secret = FALSE, tags = FALSE;
@@ -171,30 +171,11 @@ snappy_main (int argc, char *argv[])
   GOptionContext *context;
   gchar *data_dir;
 
-#ifdef ENABLE_DBUS
-  SnappyMP *mp_obj = NULL;
-#endif
-
-
   /* Try to find the path for our resources in case snappy was relocated */
   data_dir = g_strdup(SNAPPY_DATA_DIR);
   if (!g_file_test(data_dir, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
     gchar *root_dir;
 
-#ifdef G_OS_WIN32
-    root_dir = g_win32_get_package_installation_directory_of_module(NULL);
-#elif !defined(G_OS_UNIX)
-    gchar *exec_path;
-    gchar *bin_dir;
-
-    exec_path = g_file_read_link("/proc/self/exe", NULL);
-    bin_dir = g_path_get_dirname(exec_path);
-    root_dir = g_build_filename(bin_dir, "..", NULL);
-    g_free(exec_path);
-    g_free(bin_dir);
-#else
-    root_dir = NULL;
-#endif
     if (root_dir != NULL) {
       data_dir = g_build_filename(root_dir, "share", "snappy", NULL);
       g_free(root_dir);
@@ -205,12 +186,6 @@ snappy_main (int argc, char *argv[])
     g_thread_init (NULL);
 
   context = g_option_context_new ("<media file> - Play movie files");
-
-  /* Process command arguments */
-  uri_list = process_args (argc, argv, &blind, &fullscreen, &hide,
-      &loop, &secret, &suburi, &tags, context);
-  if (uri_list == NULL)
-    goto quit;
 
   /* User Interface */
   ui = g_new (UserInterface, 1);
@@ -223,7 +198,7 @@ snappy_main (int argc, char *argv[])
   interface_init (ui);
   video_texture = clutter_texture_new ();
 
-  clutter_gst_init (&argc, &argv);
+  clutter_gst_init (NULL, NULL);
 
   version_str = gst_version_string ();
   GST_DEBUG_CATEGORY_INIT (_snappy_gst_debug, "snappy", 0,
@@ -241,8 +216,6 @@ snappy_main (int argc, char *argv[])
       NULL);
 
   ok = engine_init (engine, sink);
-  if (!ok)
-    goto quit;
 
   engine->secret = secret;
   engine->loop = loop;
@@ -253,43 +226,5 @@ snappy_main (int argc, char *argv[])
   gst_bus_add_watch (engine->bus, bus_call, ui);
   gst_object_unref (engine->bus);
 
-  /* Get uri to load */
-  uri = g_list_first (uri_list)->data;
-
-  /* Load engine and start interface */
-  engine_load_uri (engine, uri);
-  interface_start (ui, uri);
-
-  /* Load subtitle file if available */
-  if (suburi != NULL) {
-    suburi = clean_uri (suburi);
-    set_subtitle_uri (engine, suburi);
-  }
-
-  /* Start playing */
-  change_state (engine, "Paused");
-  change_state (engine, "Playing");
-
-#ifdef ENABLE_DBUS
-  /* Start MPRIS Dbus object */
-  mp_obj = g_new (SnappyMP, 1);
-  mp_obj->engine = engine;
-  mp_obj->ui = ui;
-  load_dlna (mp_obj);
-#endif
-
-  /* Main loop */
-  clutter_main ();
-
-  /* Close snappy */
-  close_down (ui, engine);
-#ifdef ENABLE_DBUS
-  close_dlna (mp_obj);
-#endif
-
-quit:
-  g_list_free (uri_list);
-  g_option_context_free (context);
-
-  return ret;
+  return ui;
 }
