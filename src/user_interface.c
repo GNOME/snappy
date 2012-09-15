@@ -94,24 +94,6 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_space:
-        {
-          // Spacebar
-          toggle_playing (ui);
-
-          handled = TRUE;
-          break;
-        }
-
-        case CLUTTER_l:
-        {
-          // Loop
-          ui->engine->loop = !ui->engine->loop;
-
-          handled = TRUE;
-          break;
-        }
-
         case CLUTTER_8:
         {
           // Mute button
@@ -154,52 +136,6 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_Up:
-        case CLUTTER_Down:
-        case CLUTTER_Left:
-        case CLUTTER_Right:
-        case CLUTTER_Page_Up:
-        case CLUTTER_Page_Down:
-        {
-          gint64 pos, second;
-          gfloat progress;
-
-          pos = query_position (ui->engine);
-          second = ui->engine->second;
-
-          if (keyval == CLUTTER_Up) {
-            // Seek 1 minute foward
-            pos += 60 * second;
-
-          } else if (keyval == CLUTTER_Down) {
-            // Seek 1 minute back
-            pos -= 60 * second;
-
-          } else if (keyval == CLUTTER_Right) {
-            // Seek 10 seconds foward
-            pos += 10 * second;
-
-          } else if (keyval == CLUTTER_Left) {
-            // Seek 10 seconds back
-            pos -= 10 * second;
-
-          } else if (keyval == CLUTTER_Page_Up) {
-            // Seek 10 minutes foward
-            pos += 600 * second;
-
-          } else if (keyval == CLUTTER_Page_Down) {
-            // Seek 10 minutes back
-            pos -= 600 * second;
-          }
-
-          /* clamp the timestamp to be within the media */
-          pos = CLAMP (pos, 0, ui->engine->media_duration);
-          engine_seek (ui->engine, pos, FALSE);
-
-          handled = TRUE;
-          break;
-        }
-
         case CLUTTER_r:
         {
           // rotate texture 90 degrees.
@@ -217,65 +153,6 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           show_controls (ui, !ui->controls_showing);
 
           handled = TRUE;
-          break;
-        }
-
-        case CLUTTER_period:
-        {
-          // frame step forward
-          frame_stepping (ui->engine, TRUE);
-
-          handled = TRUE;
-          break;
-        }
-
-        case CLUTTER_comma:
-        {
-          // frame step backward
-          frame_stepping (ui->engine, FALSE);
-
-          handled = TRUE;
-          break;
-        }
-
-        case CLUTTER_v:
-        {
-          // toggle subtitles
-          toggle_subtitles (ui->engine);
-
-          handled = TRUE;
-          break;
-        }
-
-        case CLUTTER_numbersign:
-        case CLUTTER_underscore:
-        case CLUTTER_j:
-        {
-          // cycle through available audio/text/video streams
-          guint streamid;
-
-          if (keyval == CLUTTER_numbersign)
-            streamid = STREAM_AUDIO;
-          else if (keyval == CLUTTER_j)
-            streamid = STREAM_TEXT;
-          else if (keyval == CLUTTER_underscore)
-            streamid = STREAM_VIDEO;
-
-          cycle_streams (ui->engine, streamid);
-
-          handled = TRUE;
-          break;
-        }
-
-        case CLUTTER_less:
-        {
-          interface_play_next_or_prev (ui, FALSE);
-          break;
-        }
-
-        case CLUTTER_greater:
-        {
-          interface_play_next_or_prev (ui, TRUE);
           break;
         }
 
@@ -297,27 +174,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
 
         actor = clutter_stage_get_actor_at_pos (stage, CLUTTER_PICK_ALL,
             bev->x, bev->y);
-        if (actor == ui->control_play_toggle) {
-          toggle_playing (ui);
-
-        } else if (actor == ui->control_seek1 ||
-            actor == ui->control_seek2 || actor == ui->control_seekbar) {
-          gfloat x, y, dist;
-          gint64 progress;
-
-          clutter_actor_get_transformed_position (ui->control_seekbar, &x, &y);
-          dist = bev->x - x;
-          dist = CLAMP (dist, 0, ui->seek_width);
-
-          if (ui->engine->media_duration == -1) {
-            update_media_duration (ui->engine);
-          }
-
-          progress = ui->engine->media_duration * (dist / ui->seek_width);
-          engine_seek (ui->engine, progress, FALSE);
-          clutter_actor_set_size (ui->control_seekbar, dist, ui->seek_height);
-
-        } else if (actor == ui->vol_int || actor == ui->vol_int_bg) {
+        if (actor == ui->vol_int || actor == ui->vol_int_bg) {
           gfloat x, y, dist;
           gdouble volume;
 

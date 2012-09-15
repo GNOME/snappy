@@ -241,8 +241,6 @@ handle_set_media_message (SnraClient * client, GstStructure * s)
     engine_load_uri (client->ui->engine, uri);
     interface_start (client->ui, uri);
     client->state = GST_STATE_READY;
-  } else {
-    engine_stop (client->ui->engine);
   }
 
   engine_open_uri (client->ui->engine, uri);
@@ -375,6 +373,7 @@ handle_received_chunk (G_GNUC_UNUSED SoupMessage * msg, SoupBuffer * chunk,
     } else if (g_str_equal (msg_type, "play")) {
       g_print ("play\n");
       handle_play_message (client, s);
+      change_state (client->ui->engine, "Playing");
     } else if (g_str_equal (msg_type, "pause")) {
       g_print ("pause\n");
       client->paused = TRUE;
@@ -383,7 +382,7 @@ handle_received_chunk (G_GNUC_UNUSED SoupMessage * msg, SoupBuffer * chunk,
         engine_stop (client->ui->engine);
       } else {
         client->state = GST_STATE_PAUSED;
-        engine_stop (client->ui->engine);
+        change_state (client->ui->engine, "Paused");
       }
     } else if (g_str_equal (msg_type, "volume")) {
       g_print ("volume\n");
