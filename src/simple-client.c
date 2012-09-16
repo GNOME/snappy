@@ -31,7 +31,6 @@
 
 #include <src/snra-client.h>
 
-static GMainLoop *ml = NULL;
 static gint sigint_received;
 
 static void sigint_handler_sighandler (int signum);
@@ -62,7 +61,6 @@ sigint_check (G_GNUC_UNUSED void *data)
 {
   if (sigint_received) {
     g_print ("Exiting...\n");
-    g_main_loop_quit (ml);
   }
   return TRUE;
 }
@@ -81,8 +79,7 @@ main (int argc, char *argv[])
   int ret = 1;
   const gchar *server = NULL;
 
-  gst_init (&argc, &argv);
-  clutter_init (&argc, &argv);
+  clutter_gst_init (&argc, &argv);
 
   if (argc > 1) {
     /* Connect directly to the requested server, no avahi */
@@ -98,14 +95,11 @@ main (int argc, char *argv[])
   if (client == NULL)
     goto fail;
 
-  ml = g_main_loop_new (NULL, FALSE);
-  g_main_loop_run (ml);
+  clutter_main ();
 
   ret = 0;
 fail:
   if (client)
     g_object_unref (client);
-  if (ml)
-    g_main_loop_unref (ml);
   return ret;
 }
