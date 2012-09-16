@@ -121,7 +121,7 @@ handle_enrol_message (SnraClient * client, GstStructure * s)
 
   if (snra_json_structure_get_double (s, "volume-level", &new_vol)) {
     if (client->ui == NULL)
-      client->ui = snappy_construct ();
+      client->ui = snappy_construct (client);
 
     engine_volume (client->ui->engine, new_vol);
   }
@@ -172,9 +172,8 @@ handle_enrol_message (SnraClient * client, GstStructure * s)
   }
 }
 
-static void
-on_eos_msg (G_GNUC_UNUSED GstBus * bus, G_GNUC_UNUSED GstMessage * msg,
-    SnraClient * client)
+void
+on_eos_msg (SnraClient * client)
 {
   SoupMessage *soup_msg;
   /* FIXME: Next song should all be handled server side */
@@ -237,7 +236,7 @@ handle_set_media_message (SnraClient * client, GstStructure * s)
       GST_TIME_ARGS (base_time));
  
   if (client->state == GST_STATE_NULL) {
-    client->ui = snappy_construct ();
+    client->ui = snappy_construct (client);
     engine_load_uri (client->ui->engine, uri);
     interface_start (client->ui, uri);
     client->state = GST_STATE_READY;

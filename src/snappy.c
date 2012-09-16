@@ -41,6 +41,8 @@
 #include "gst_engine.h"
 #include "utils.h"
 
+#include "snra-client.h"
+
 
 /*               Close snappy down               */
 void
@@ -153,7 +155,7 @@ process_args (int argc, char *argv[],
 
 /*            snappy's main function             */
 UserInterface *
-snappy_construct ()
+snappy_construct (SnraClient *client)
 {
   GstEngine *engine = NULL;
   ClutterActor *video_texture;
@@ -223,7 +225,7 @@ snappy_construct ()
   ui->engine = engine;
   ui->texture = video_texture;
 
-  gst_bus_add_watch (engine->bus, bus_call, ui);
+  gst_bus_add_watch (engine->bus, bus_call, client);
   gst_object_unref (engine->bus);
 
   return ui;

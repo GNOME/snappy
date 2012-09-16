@@ -27,6 +27,7 @@
 #include "user_interface.h"
 #include "gst_engine.h"
 #include "utils.h"
+#include "snra-client.h"
 
 #define SAVE_POSITION_MIN_DURATION 300 * 1000   // don't save >5 minute files
 #define SAVE_POSITION_THRESHOLD 0.05    // percentage threshold
@@ -463,7 +464,8 @@ at_the_eos (GstEngine * engine)
 gboolean
 bus_call (GstBus * bus, GstMessage * msg, gpointer data)
 {
-  UserInterface *ui = (UserInterface *) data;
+  SnraClient *client = (SnraClient *) data;
+  UserInterface *ui = client->ui;
   GstEngine *engine = ui->engine;
 
   switch (GST_MESSAGE_TYPE (msg)) {
@@ -519,7 +521,7 @@ bus_call (GstBus * bus, GstMessage * msg, gpointer data)
     case GST_MESSAGE_EOS:
     {
       GST_DEBUG ("End of stream");
-      stream_done (engine, ui);
+      on_eos_msg (client);
 
       break;
     }

@@ -36,8 +36,6 @@ struct _SnraClient
   SoupSession *soup;
   JsonParser *json;
 
-  // GstElement *player;
-
   guint timeout;
 
   gboolean connecting;
@@ -59,6 +57,7 @@ struct _SnraClientClass
 
 GType snra_client_get_type(void);
 SnraClient *snra_client_new(const gchar *server);
+void on_eos_msg (SnraClient * client);
 
 G_END_DECLS
 #endif
