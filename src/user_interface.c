@@ -342,7 +342,7 @@ load_controls (UserInterface * ui)
   ui->info_box = clutter_box_new (info_box_layout);
 
   ui->control_title = clutter_text_new_full ("Sans 32px",
-      cut_long_filename (ui->filename, ui->title_length), &control_color1);
+      "synchronized network stream", &control_color1);
   clutter_text_set_max_length (CLUTTER_TEXT (ui->control_title),
       ui->title_length);
   clutter_box_layout_pack (CLUTTER_BOX_LAYOUT (info_box_layout),
@@ -871,11 +871,6 @@ interface_load_uri (UserInterface * ui, gchar * uri)
 
   ui->filename = g_path_get_basename (ui->fileuri);
 
-  if (ui->stage != NULL) {
-    clutter_stage_set_title (CLUTTER_STAGE (ui->stage), ui->filename);
-    clutter_text_set_text (CLUTTER_TEXT (ui->control_title), ui->filename);
-  }
-
   ui->duration_str = position_ns_to_str (ui->engine->media_duration);
   ui->media_width = ui->engine->media_width;
   ui->media_height = ui->engine->media_height;
@@ -949,7 +944,7 @@ interface_start (UserInterface * ui, gchar * uri)
   clutter_stage_set_color (CLUTTER_STAGE (ui->stage), &stage_color);
   clutter_actor_set_size (CLUTTER_ACTOR (ui->stage), ui->media_width,
       ui->media_height);
-  clutter_stage_set_title (CLUTTER_STAGE (ui->stage), ui->filename);
+  clutter_stage_set_title (CLUTTER_STAGE (ui->stage), "snappy");
 
   clutter_actor_set_size (CLUTTER_ACTOR (ui->stage), ui->stage_width,
       ui->stage_height);
