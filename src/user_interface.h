@@ -123,6 +123,7 @@ gboolean interface_load_uri (UserInterface * ui, gchar * uri);
 void interface_play_next_or_prev (UserInterface * ui, gboolean next);
 void interface_start (UserInterface * ui, gchar * uri);
 gboolean interface_update_controls (UserInterface * ui);
+void toggle_playing (UserInterface * ui, gboolean playing);
 
 G_END_DECLS
 #endif /* __USER_INTERFACE_H__ */

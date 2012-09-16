@@ -364,17 +364,18 @@ handle_received_chunk (G_GNUC_UNUSED SoupMessage * msg, SoupBuffer * chunk,
     }
 
     if (g_str_equal (msg_type, "enrol")) {
-      g_print ("enrol\n");
+      g_print ("chunk: enrol\n");
       handle_enrol_message (client, s);
     } else if (g_str_equal (msg_type, "set-media")) {
-      g_print ("set-media\n");
+      g_print ("chunk: set-media\n");
       handle_set_media_message (client, s);
     } else if (g_str_equal (msg_type, "play")) {
-      g_print ("play\n");
+      g_print ("chunk: play\n");
       handle_play_message (client, s);
       change_state (client->ui->engine, "Playing");
+      toggle_playing (client->ui, TRUE);
     } else if (g_str_equal (msg_type, "pause")) {
-      g_print ("pause\n");
+      g_print ("chunk: pause\n");
       client->paused = TRUE;
       if (client->enabled == FALSE) {
         client->state = DISABLED_STATE;
@@ -382,15 +383,16 @@ handle_received_chunk (G_GNUC_UNUSED SoupMessage * msg, SoupBuffer * chunk,
       } else {
         client->state = GST_STATE_PAUSED;
         change_state (client->ui->engine, "Paused");
+        toggle_playing (client->ui, FALSE);
       }
     } else if (g_str_equal (msg_type, "volume")) {
-      g_print ("volume\n");
+      g_print ("chunk: volume\n");
       handle_set_volume_message (client, s);
     } else if (g_str_equal (msg_type, "client-setting")) {
-      g_print ("client-setting\n");
+      g_print ("chunk: client-setting\n");
       handle_set_client_message (client, s);
     } else {
-      g_print ("Unhandled event of type %s\n", msg_type);
+      g_print ("chunk: Unhandled event of type %s\n", msg_type);
     }
   }
 }

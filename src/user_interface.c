@@ -43,7 +43,6 @@ static void size_change (ClutterStage * stage,
     UserInterface * ui);
 static void show_controls (UserInterface * ui, gboolean vis);
 static void toggle_fullscreen (UserInterface * ui);
-static void toggle_playing (UserInterface * ui);
 static void update_controls_size (UserInterface * ui);
 static gboolean update_volume (UserInterface * ui, gdouble volume);
 
@@ -716,23 +715,17 @@ toggle_fullscreen (UserInterface * ui)
   }
 }
 
-static void
-toggle_playing (UserInterface * ui)
+void
+toggle_playing (UserInterface * ui, gboolean playing)
 {
   GstEngine *engine = ui->engine;
 
-  if (engine->playing) {
-    change_state (engine, "Paused");
-    engine->playing = FALSE;
-
-    clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->control_play_toggle),
-        ui->play_png, NULL);
-  } else {
-    change_state (engine, "Playing");
-    engine->playing = TRUE;
-
+  if (playing) {
     clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->control_play_toggle),
         ui->pause_png, NULL);
+  } else {
+    clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->control_play_toggle),
+        ui->play_png, NULL);
   }
 }
 
