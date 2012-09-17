@@ -238,7 +238,7 @@ handle_set_media_message (SnraClient * client, GstStructure * s)
   if (client->state == GST_STATE_NULL) {
     client->ui = snappy_construct (client);
     engine_load_uri (client->ui->engine, uri);
-    interface_start (client->ui, uri);
+    interface_start (client->ui, uri, (gpointer) client);
     client->state = GST_STATE_READY;
   }
 

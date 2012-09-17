@@ -25,12 +25,13 @@
 #include <clutter-gst/clutter-gst.h>
 
 #include "user_interface.h"
+#include "snra-client.h"
 #include "utils.h"
 
 // Declaration of static functions
 static gboolean controls_timeout_cb (gpointer data);
 static gboolean event_cb (ClutterStage * stage, ClutterEvent * event,
-    UserInterface * ui);
+    SnraClient * ui);
 static void load_controls (UserInterface * ui);
 static gboolean penalty_box (gpointer data);
 static gchar *position_ns_to_str (gint64 nanoseconds);
@@ -64,8 +65,9 @@ controls_timeout_cb (gpointer data)
 }
 
 static gboolean
-event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
+event_cb (ClutterStage * stage, ClutterEvent * event, SnraClient * client)
 {
+  UserInterface *ui = client->ui;
   gboolean handled = FALSE;
 
   switch (event->type) {
@@ -173,7 +175,25 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
 
         actor = clutter_stage_get_actor_at_pos (stage, CLUTTER_PICK_ALL,
             bev->x, bev->y);
-        if (actor == ui->vol_int || actor == ui->vol_int_bg) {
+        if (actor == ui->control_play_toggle) {
+          SoupMessage *soup_msg;
+          char *url = NULL;
+
+          if (ui->engine->playing) {
+            g_print ("Pause\n");
+            url = g_strdup_printf ("http://%s:%u/control/pause",
+                client->connected_server, client->connected_port);
+          } else {
+            g_print ("Play\n");
+            url = g_strdup_printf ("http://%s:%u/control/play",
+                client->connected_server, client->connected_port);
+          }
+
+          soup_msg = soup_message_new ("GET", url);
+          soup_session_queue_message (client->soup, soup_msg, NULL, NULL);
+          g_free (url);
+
+        } else if (actor == ui->vol_int || actor == ui->vol_int_bg) {
           gfloat x, y, dist;
           gdouble volume;
 
@@ -723,9 +743,11 @@ toggle_playing (UserInterface * ui, gboolean playing)
   if (playing) {
     clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->control_play_toggle),
         ui->pause_png, NULL);
+
   } else {
     clutter_texture_set_from_file (CLUTTER_TEXTURE (ui->control_play_toggle),
         ui->play_png, NULL);
+
   }
 }
 
@@ -911,8 +933,9 @@ interface_play_next_or_prev (UserInterface * ui, gboolean next)
 }
 
 void
-interface_start (UserInterface * ui, gchar * uri)
+interface_start (UserInterface * ui, gchar * uri, gpointer * data)
 {
+  SnraClient * client = data;
   ClutterColor stage_color = { 0x00, 0x00, 0x00, 0x00 };
 
   g_print ("Loading ui!\n");
@@ -975,7 +998,7 @@ interface_start (UserInterface * ui, gchar * uri)
   g_signal_connect (CLUTTER_STAGE (ui->stage), "allocation-changed",
       G_CALLBACK (size_change), ui);
   g_signal_connect (CLUTTER_STAGE (ui->stage), "event", G_CALLBACK (event_cb),
-      ui);
+      client);
 
   progress_timing (ui);
 
