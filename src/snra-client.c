@@ -278,16 +278,18 @@ handle_play_message (SnraClient * client, GstStructure * s)
   if (client->ui) {
     GstClockTime stream_time =
         gst_clock_get_time (client->net_clock) - base_time;
-    g_print ("Playing base_time %" GST_TIME_FORMAT " (offset %" GST_TIME_FORMAT
-        ")\n", GST_TIME_ARGS (base_time), GST_TIME_ARGS (stream_time));
     gst_element_set_base_time (GST_ELEMENT (client->ui->engine->player),
         base_time);
     if (client->enabled == FALSE) {
+      g_print ("Client disabled. Not playing\n");
       client->state = DISABLED_STATE;
       engine_stop (client->ui->engine);
     } else {
+      g_print ("Playing base_time %" GST_TIME_FORMAT " (offset %" GST_TIME_FORMAT
+          ")\n", GST_TIME_ARGS (base_time), GST_TIME_ARGS (stream_time));
       client->state = GST_STATE_PLAYING;
       engine_play (client->ui->engine);
+      toggle_playing (client->ui, TRUE);
     }
   }
 }
@@ -311,9 +313,10 @@ handle_set_client_message (SnraClient * client, GstStructure * s)
   if (!snra_json_structure_get_boolean (s, "enabled", &client->enabled))
     return;
 
-  if (client->enabled == FALSE)
+  if (client->enabled == FALSE) {
     client->state = DISABLED_STATE;
-  else if (client->paused) {
+    engine_stop (client->ui->engine);
+  } else if (client->paused) {
     client->state = GST_STATE_PAUSED;
     engine_stop (client->ui->engine);
   } else {
@@ -372,8 +375,6 @@ handle_received_chunk (G_GNUC_UNUSED SoupMessage * msg, SoupBuffer * chunk,
     } else if (g_str_equal (msg_type, "play")) {
       g_print ("chunk: play\n");
       handle_play_message (client, s);
-      change_state (client->ui->engine, "Playing");
-      toggle_playing (client->ui, TRUE);
     } else if (g_str_equal (msg_type, "pause")) {
       g_print ("chunk: pause\n");
       client->paused = TRUE;
