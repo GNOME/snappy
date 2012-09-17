@@ -209,11 +209,7 @@ snappy_construct (SnraClient *client)
 
   /* Gstreamer engine */
   engine = g_new (GstEngine, 1);
-  sink = gst_element_factory_make ("autocluttersink", "cluttersink");
-  if (sink == NULL) {
-    GST_DEBUG ("autocluttersink not found, falling back to cluttersink\n");
-    sink = gst_element_factory_make ("cluttersink", "cluttersink");
-  }
+  sink = gst_element_factory_make ("cluttersink", "cluttersink");
   g_object_set (G_OBJECT (sink), "texture", CLUTTER_TEXTURE (video_texture),
       NULL);
 
