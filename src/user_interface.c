@@ -156,6 +156,22 @@ event_cb (ClutterStage * stage, ClutterEvent * event, SnraClient * client)
           break;
         }
 
+        case CLUTTER_less:
+        case CLUTTER_greater:
+        {
+          SoupMessage *soup_msg;
+          char *url = NULL;
+
+          url = g_strdup_printf ("http://%s:%u/control/next",
+                client->connected_server, client->connected_port);
+          soup_msg = soup_message_new ("GET", url);
+          soup_session_queue_message (client->soup, soup_msg, NULL, NULL);
+          g_free (url);
+
+          handled = TRUE;
+          break;
+        }
+
         default:
         {
           handled = FALSE;
@@ -203,7 +219,6 @@ event_cb (ClutterStage * stage, ClutterEvent * event, SnraClient * client)
           dist = CLAMP (dist, 0, ui->volume_width);
 
           volume = dist / ui->volume_width;
-          //g_object_set (G_OBJECT (ui->engine->player), "volume", volume, NULL);
           clutter_actor_set_size (ui->vol_int, dist, ui->volume_height);
 
           url = g_strdup_printf ("http://%s:%u/control/volume?level=%f",
