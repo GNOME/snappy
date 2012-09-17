@@ -45,7 +45,6 @@ static void size_change (ClutterStage * stage,
 static void show_controls (UserInterface * ui, gboolean vis);
 static void toggle_fullscreen (UserInterface * ui);
 static void update_controls_size (UserInterface * ui);
-static gboolean update_volume (UserInterface * ui, gdouble volume);
 
 /* ---------------------- static functions ----------------------- */
 
@@ -103,7 +102,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, SnraClient * client)
 
           g_object_get (G_OBJECT (ui->engine->player), "mute", &muteval, NULL);
           g_object_set (G_OBJECT (ui->engine->player), "mute", !muteval, NULL);
-          update_volume (ui, volume);
+          interface_update_volume (ui, volume);
 
           handled = TRUE;
           break;
@@ -131,7 +130,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, SnraClient * client)
                 volume, NULL);
           }
 
-          update_volume (ui, volume);
+          interface_update_volume (ui, volume);
 
           handled = TRUE;
           break;
@@ -196,14 +195,22 @@ event_cb (ClutterStage * stage, ClutterEvent * event, SnraClient * client)
         } else if (actor == ui->vol_int || actor == ui->vol_int_bg) {
           gfloat x, y, dist;
           gdouble volume;
+          SoupMessage *soup_msg;
+          char *url = NULL;
 
           clutter_actor_get_transformed_position (ui->vol_int_bg, &x, &y);
           dist = bev->x - x;
           dist = CLAMP (dist, 0, ui->volume_width);
 
           volume = dist / ui->volume_width;
-          g_object_set (G_OBJECT (ui->engine->player), "volume", volume, NULL);
+          //g_object_set (G_OBJECT (ui->engine->player), "volume", volume, NULL);
           clutter_actor_set_size (ui->vol_int, dist, ui->volume_height);
+
+          url = g_strdup_printf ("http://%s:%u/control/volume?level=%f",
+                client->connected_server, client->connected_port, volume);
+          soup_msg = soup_message_new ("GET", url);
+          soup_session_queue_message (client->soup, soup_msg, NULL, NULL);
+          g_free (url);
 
         } else if (actor == ui->control_bg || actor == ui->control_title
             || actor == ui->control_pos) {
@@ -814,19 +821,7 @@ update_controls_size (UserInterface * ui)
   clutter_actor_set_size (ui->fullscreen_toggle, icon_size, icon_size);
   clutter_actor_set_size (ui->quit_button, icon_size, icon_size);
 
-  update_volume (ui, -1);
-}
-
-static gboolean
-update_volume (UserInterface * ui, gdouble volume)
-{
-  if (volume == -1)
-    g_object_get (G_OBJECT (ui->engine->player), "volume", &volume, NULL);
-
-  clutter_actor_set_size (ui->vol_int, volume * ui->volume_width,
-      ui->volume_height);
-
-  return TRUE;
+  interface_update_volume (ui, -1);
 }
 
 /* -------------------- non-static functions --------------------- */
@@ -1016,7 +1011,19 @@ interface_update_controls (UserInterface * ui)
 {
   progress_update_text (ui);
   progress_update_seekbar (ui);
-  update_volume (ui, -1);
+  interface_update_volume (ui, -1);
+
+  return TRUE;
+}
+
+gboolean
+interface_update_volume (UserInterface * ui, gdouble volume)
+{
+  if (volume == -1)
+    g_object_get (G_OBJECT (ui->engine->player), "volume", &volume, NULL);
+
+  clutter_actor_set_size (ui->vol_int, volume * ui->volume_width,
+      ui->volume_height);
 
   return TRUE;
 }

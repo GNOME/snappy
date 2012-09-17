@@ -304,6 +304,7 @@ handle_set_volume_message (SnraClient * client, GstStructure * s)
 
   if (client->ui) {
     engine_volume (client->ui->engine, new_vol);
+    interface_update_volume (client->ui, new_vol);
   }
 }
 
