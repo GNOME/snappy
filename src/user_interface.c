@@ -239,9 +239,9 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
       /* http://cgit.freedesktop.org/xorg/proto/x11proto/plain/keysymdef.h */
       guint keyval = clutter_event_get_key_symbol (event);
       switch (keyval) {
-        case CLUTTER_q:
-        case CLUTTER_Q:
-        case CLUTTER_Escape:
+        case CLUTTER_KEY_q:
+        case CLUTTER_KEY_Q:
+        case CLUTTER_KEY_Escape:
         {
           gtk_main_quit ();
 
@@ -249,9 +249,9 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_f:
-        case CLUTTER_F:
-        case CLUTTER_F11:
+        case CLUTTER_KEY_f:
+        case CLUTTER_KEY_F:
+        case CLUTTER_KEY_F11:
         {
           // Fullscreen keys
           toggle_fullscreen (ui);
@@ -260,7 +260,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_space:
+        case CLUTTER_KEY_space:
         {
           // Spacebar
           toggle_playing (ui);
@@ -269,8 +269,8 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_l:
-        case CLUTTER_L:
+        case CLUTTER_KEY_l:
+        case CLUTTER_KEY_L:
         {
           // Loop
           ui->engine->loop = !ui->engine->loop;
@@ -279,7 +279,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_8:
+        case CLUTTER_KEY_8:
         {
           // Mute button
           gdouble volume = 0.0;
@@ -293,13 +293,13 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_9:
-        case CLUTTER_0:
+        case CLUTTER_KEY_9:
+        case CLUTTER_KEY_0:
         {
           gdouble volume;
           g_object_get (G_OBJECT (ui->engine->player), "volume", &volume, NULL);
           // Volume Down
-          if (keyval == CLUTTER_9 && volume > 0.0) {
+          if (keyval == CLUTTER_KEY_9 && volume > 0.0) {
             volume -= 0.05;
             if (volume < 0.01)
               volume = 0;
@@ -307,7 +307,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
                 volume, NULL);
 
             // Volume Up
-          } else if (keyval == CLUTTER_0 && volume < 1.0) {
+          } else if (keyval == CLUTTER_KEY_0 && volume < 1.0) {
             volume += 0.05;
             if (volume > 1)
               volume = 1;
@@ -321,39 +321,39 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_Up:
-        case CLUTTER_Down:
-        case CLUTTER_Left:
-        case CLUTTER_Right:
-        case CLUTTER_Page_Up:
-        case CLUTTER_Page_Down:
+        case CLUTTER_KEY_Up:
+        case CLUTTER_KEY_Down:
+        case CLUTTER_KEY_Left:
+        case CLUTTER_KEY_Right:
+        case CLUTTER_KEY_Page_Up:
+        case CLUTTER_KEY_Page_Down:
         {
           gint64 pos, second;
 
           pos = query_position (ui->engine);
           second = ui->engine->second;
 
-          if (keyval == CLUTTER_Up) {
+          if (keyval == CLUTTER_KEY_Up) {
             // Seek 1 minute foward
             pos += 60 * second;
 
-          } else if (keyval == CLUTTER_Down) {
+          } else if (keyval == CLUTTER_KEY_Down) {
             // Seek 1 minute back
             pos -= 60 * second;
 
-          } else if (keyval == CLUTTER_Right) {
+          } else if (keyval == CLUTTER_KEY_Right) {
             // Seek 10 seconds foward
             pos += 10 * second;
 
-          } else if (keyval == CLUTTER_Left) {
+          } else if (keyval == CLUTTER_KEY_Left) {
             // Seek 10 seconds back
             pos -= 10 * second;
 
-          } else if (keyval == CLUTTER_Page_Up) {
+          } else if (keyval == CLUTTER_KEY_Page_Up) {
             // Seek 10 minutes foward
             pos += 600 * second;
 
-          } else if (keyval == CLUTTER_Page_Down) {
+          } else if (keyval == CLUTTER_KEY_Page_Down) {
             // Seek 10 minutes back
             pos -= 600 * second;
           }
@@ -370,8 +370,8 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_r:
-        case CLUTTER_R:
+        case CLUTTER_KEY_r:
+        case CLUTTER_KEY_R:
         {
           // rotate texture 90 degrees.
           rotate_video (ui);
@@ -380,8 +380,8 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_c:
-        case CLUTTER_C:
+        case CLUTTER_KEY_c:
+        case CLUTTER_KEY_C:
         {
           // show or hide controls
           penalty_box (ui);
@@ -392,7 +392,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_period:
+        case CLUTTER_KEY_period:
         {
           // frame step forward
           frame_stepping (ui->engine, TRUE);
@@ -401,7 +401,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_comma:
+        case CLUTTER_KEY_comma:
         {
           // frame step backward
           frame_stepping (ui->engine, FALSE);
@@ -410,8 +410,8 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_v:
-        case CLUTTER_V:
+        case CLUTTER_KEY_v:
+        case CLUTTER_KEY_V:
         {
           // toggle subtitles
           if (toggle_subtitles (ui->engine)) {
@@ -429,19 +429,19 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_numbersign:
-        case CLUTTER_underscore:
-        case CLUTTER_j:
-        case CLUTTER_J:
+        case CLUTTER_KEY_numbersign:
+        case CLUTTER_KEY_underscore:
+        case CLUTTER_KEY_j:
+        case CLUTTER_KEY_J:
         {
           // cycle through available audio/text/video streams
           guint streamid;
 
-          if (keyval == CLUTTER_numbersign)
+          if (keyval == CLUTTER_KEY_numbersign)
             streamid = STREAM_AUDIO;
-          else if (keyval == CLUTTER_j || keyval == CLUTTER_J)
+          else if (keyval == CLUTTER_KEY_j || keyval == CLUTTER_KEY_J)
             streamid = STREAM_TEXT;
-          else if (keyval == CLUTTER_underscore)
+          else if (keyval == CLUTTER_KEY_underscore)
             streamid = STREAM_VIDEO;
 
           cycle_streams (ui->engine, streamid);
@@ -450,7 +450,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_o:
+        case CLUTTER_KEY_o:
         {
           // switch display to time left of the stream
           ui->duration_str_fwd_direction = !ui->duration_str_fwd_direction;
@@ -475,7 +475,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_less:
+        case CLUTTER_KEY_less:
         {
           interface_play_next_or_prev (ui, FALSE);
 
@@ -483,7 +483,7 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_greater:
+        case CLUTTER_KEY_greater:
         {
           interface_play_next_or_prev (ui, TRUE);
 
@@ -491,14 +491,14 @@ event_cb (ClutterStage * stage, ClutterEvent * event, UserInterface * ui)
           break;
         }
 
-        case CLUTTER_minus:
-        case CLUTTER_plus:
+        case CLUTTER_KEY_minus:
+        case CLUTTER_KEY_plus:
         {
           // get current av_offset
           gint64 av_offset = ui->engine->av_offset;
 
           // change a/v offset
-          if (keyval == CLUTTER_minus) {
+          if (keyval == CLUTTER_KEY_minus) {
             engine_change_offset (ui->engine, av_offset - (GST_SECOND / 20));
           } else {
             engine_change_offset (ui->engine, av_offset + (GST_SECOND / 20));
@@ -1512,7 +1512,7 @@ interface_on_drop_cb (GtkWidget * widget,
   interface_load_uri (ui, list[0]);
   engine_play (ui->engine);
 
-  if (!CLUTTER_ACTOR_IS_VISIBLE (ui->texture)) {
+  if (!clutter_actor_is_visible (ui->texture)) {
     clutter_actor_show (ui->texture);
   }
 }
