@@ -8,7 +8,7 @@
   <shortdesc xml:lang="en">Powerful media player with a minimalistic interface</shortdesc>
   <description>snappy is an open source media player that gathers the power and flexibility of gstreamer inside the comfort of a minimalistic clutter interface.
 </description>
-  <homepage rdf:resource="http://live.gnome.org/snappy" />
+  <homepage rdf:resource="https://wiki.gnome.org/Apps/Snappy" />
   <mailing-list rdf:resource="http://mail.gnome.org/mailman/listinfo/snappy" />
   <download-page rdf:resource="https://download.gnome.org/sources/snappy/" />
   <bug-database rdf:resource="https://gitlab.gnome.org/GNOME/snappy/issues/" />
