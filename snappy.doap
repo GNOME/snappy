@@ -11,7 +11,7 @@
   <homepage rdf:resource="http://live.gnome.org/snappy" />
   <mailing-list rdf:resource="http://mail.gnome.org/mailman/listinfo/snappy" />
   <download-page rdf:resource="http://people.collabora.co.uk/~luisbg/snappy/" />
-  <bug-database rdf:resource="https://bugzilla.gnome.org/browse.cgi?product=snappy" />
+  <bug-database rdf:resource="https://gitlab.gnome.org/GNOME/snappy/issues/" />
 
   <category rdf:resource="http://api.gnome.org/doap-extensions#desktop" />
 
