@@ -10,8 +10,6 @@ version 1.0 - "I'll be back." Terminator
 2014-03-24
 
 
-get the source from:       http://git.gnome.org/snappy
-report bugs at:            https://bugzilla.gnome.org/browse.cgi?product=snappy
-contact:                   snappy-list@gnome.org
-project page:              http://projects.gnome.org/snappy/
-wiki:                      https://live.gnome.org/snappy
+get the source from:       https://gitlab.gnome.org/GNOME/snappy
+report bugs at:            https://gitlab.gnome.org/GNOME/snappy/issues/
+project page:              https://wiki.gnome.org/Apps/Snappy
